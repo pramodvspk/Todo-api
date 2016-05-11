@@ -1,30 +1,31 @@
+//Initializing the required npm modules
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var app = express();
+//Setting up the port on which the application is going to run
 var PORT = process.env.PORT || 3000;
-/*var todos = [{
-	id: 1,
-	description: "Meet mom for lunch",
-	completed: false
-	}];
-*/
 
 var todos = [];
 var todoNextId = 1;
 
+// Middleware call to bodyParser, so that it converts all the incoming data into JSON format
 app.use(bodyParser.json());
 
+// GET /
+// GET the home page, which returns a welcome string 
 app.get('/', function (req, res){
 	res.send('Todo API root');
 });
 
 // GET /todos
-// GET /todos/1
+// GET all the todo items
 app.get('/todos', function (req, res){
 	res.json(todos);
 });
 
+// GET /todos/:id
+// GET todo items by Id
 app.get('/todos/:id', function (req, res){
 	var todoId = parseInt(req.params.id,10);
 	var matchedTodo = _.findWhere(todos, {id:todoId});
@@ -35,7 +36,8 @@ app.get('/todos/:id', function (req, res){
 	}
 });
 
-//POST request /todos
+//POST /todos
+//POST a todo item
 app.post('/todos', function (req, res) {
 	var body = req.body;
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
@@ -49,14 +51,13 @@ app.post('/todos', function (req, res) {
 });
 
 // DELETE /todos/:id
-
+// DELETE a todo item and return it back to the user
 app.delete('/todos/:id', function (req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	var matchedTodo = _.findWhere(todos, {id:todoId});
 	if (matchedTodo){
 		todos = _.without(todos, matchedTodo);
-		console.log("The removed todo item is " + matchedTodo);
-		res.json(todos);
+		res.json(matchedTodo);
 	}else{
 		res.status(404).send();
 	}
