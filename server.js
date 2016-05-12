@@ -43,7 +43,7 @@ app.post('/todos', function (req, res) {
 	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
 		return res.status(400).send();
 	}else{
-		var newTodo = _.pick(body,'description','completed')
+		var newTodo = _.pick(body,'description','completed');
 		newTodo.id = todoNextId++;
 		todos.push(newTodo);
 		res.json(todos);
@@ -64,4 +64,46 @@ app.delete('/todos/:id', function (req, res) {
 });
 app.listen(PORT, function () {
 	console.log("Express listening on port"+ PORT + "!");
-})
+});
+
+// PUT /todos/:id
+// Update a todo item
+app.put('/todos/:id', function (req, res) {
+	var body = req.body; 
+	var todoId = parseInt(req.params.id, 10);
+	var matchedTodo = _.findWhere(todos, {id:todoId});
+	var body = _.pick(body,'description','completed');
+	var validAttributes = {};
+
+	//Handling the not found request
+	if (! matchedTodo){
+		return res.status(404).send();
+	}
+
+	//Handling the bad syntax request
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+		validAttributes.completed = body.completed;
+	}else if (body.hasOwnProperty('completed')){
+		//Runs if the attribute completed has been provided and is not valid
+		return res.status(400).send();
+	}
+
+	if (body.hasOwnProperty('description') && _.isString('description') && body.description.trim().length > 0){
+		validAttributes.description = body.description;
+	}else if (body.hasOwnProperty('description')) {
+		//Runs if the attribute description has been provided and is not valid
+		return res.status(400).send();
+	}
+
+	/*
+	New underscore method extend which has source and destination
+	_.extend(destination, *sources)
+	_.extend({name: 'moe'}, {age: 50});
+	=> {name: 'moe', age: 50}
+	Here the source is validAttributes and the destination is todos item where is going to be updated
+	*/
+
+	_.extend(matchedTodo, validAttributes);
+	res.json(matchedTodo);
+
+});
