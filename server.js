@@ -2,6 +2,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
+var db = require('./db.js')
 var app = express();
 //Setting up the port on which the application is going to run
 var PORT = process.env.PORT || 3000;
@@ -13,7 +14,7 @@ var todoNextId = 1;
 app.use(bodyParser.json());
 
 // GET /
-// GET the home page, which returns a welcome string 
+// GET the home page, which returns a welcome string
 app.get('/', function (req, res){
 	res.send('Todo API root');
 });
@@ -54,14 +55,21 @@ app.get('/todos/:id', function (req, res){
 //POST a todo item
 app.post('/todos', function (req, res) {
 	var body = req.body;
-	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+	var newTodo = _.pick(body,'description','completed');
+	db.todo.create(newTodo).then(function(todo){
+		res.json(todo.toJSON());
+	}).catch(function (e){
+		res.status(400).json(e);
+	});
+
+/*	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
 		return res.status(400).send();
 	}else{
 		var newTodo = _.pick(body,'description','completed');
 		newTodo.id = todoNextId++;
 		todos.push(newTodo);
 		res.json(todos);
-	}
+	}*/
 });
 
 // DELETE /todos/:id
@@ -76,14 +84,12 @@ app.delete('/todos/:id', function (req, res) {
 		res.status(404).send();
 	}
 });
-app.listen(PORT, function () {
-	console.log("Express listening on port"+ PORT + "!");
-});
+
 
 // PUT /todos/:id
 // Update a todo item
 app.put('/todos/:id', function (req, res) {
-	var body = req.body; 
+	var body = req.body;
 	var todoId = parseInt(req.params.id, 10);
 	var matchedTodo = _.findWhere(todos, {id:todoId});
 	var body = _.pick(body,'description','completed');
@@ -120,4 +126,10 @@ app.put('/todos/:id', function (req, res) {
 	_.extend(matchedTodo, validAttributes);
 	res.json(matchedTodo);
 
+});
+
+db.sequelize.sync().then(function (){
+	app.listen(PORT, function () {
+		console.log("Express listening on port"+ PORT + "!");
+	});
 });
