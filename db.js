@@ -1,4 +1,6 @@
 // Load all the models into sequelize and return the database connection to server.js
+// Added the heroku postgres addon 
+// Installed 
 var Sequelize = require('sequelize');
 var env = process.env.NODE_ENV || 'development';
 var sequelize;
