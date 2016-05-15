@@ -23,6 +23,7 @@ app.get('/', function (req, res){
 // GET /todos - all the todo items
 app.get('/todos', function (req, res){
 	var query = req.query;
+	// The where condition for querying
 	var where ={};
 
 	if (query.hasOwnProperty("completed") && query.completed === "true"){
@@ -42,22 +43,6 @@ app.get('/todos', function (req, res){
 	}, function (e){
 		res.status(500).send();
 	});
-
-
-
-/*	var filteredTodos = todos;
-	if (queryParams.hasOwnProperty("completed") && queryParams.completed === "true"){
-		filteredTodos = _.where(filteredTodos, {completed: true});
-	}else if(queryParams.hasOwnProperty("completed") && queryParams.completed === "false") {
-		filteredTodos = _.where(filteredTodos, {completed: false});
-	}
-
-	if (queryParams.hasOwnProperty("q") && queryParams.q.length>0){
-		filteredTodos = _.filter(filteredTodos, function(todo){
-			return(todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1);
-		});
-	}
-	res.json(filteredTodos);*/
 });
 
 // GET /todos/:id
@@ -75,12 +60,6 @@ app.get('/todos/:id', function (req, res){
 		// Issue with the server and all
 		res.status(500).json(e);
 	})
-/*	var matchedTodo = _.findWhere(todos, {id:todoId});
-	if (matchedTodo){
-		res.json(matchedTodo);
-	}else{
-		res.status(404).send();
-	}*/
 });
 
 //POST /todos
@@ -93,15 +72,6 @@ app.post('/todos', function (req, res) {
 	}).catch(function (e){
 		res.status(400).json(e);
 	});
-
-/*	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
-		return res.status(400).send();
-	}else{
-		var newTodo = _.pick(body,'description','completed');
-		newTodo.id = todoNextId++;
-		todos.push(newTodo);
-		res.json(todos);
-	}*/
 });
 
 // DELETE /todos/:id
@@ -115,6 +85,7 @@ app.delete('/todos/:id', function (req, res) {
 				error: "No todo found with id "+todoId
 			});
 		}else {
+			// 204 signifies that no content need to be sent along with the OK Status
 			res.status(204).send();
 		}
 	}, function (e) {
@@ -128,40 +99,32 @@ app.delete('/todos/:id', function (req, res) {
 app.put('/todos/:id', function (req, res) {
 	var body = req.body;
 	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {id:todoId});
 	var body = _.pick(body,'description','completed');
-	var validAttributes = {};
+	var attributes = {};
 
-	//Handling the not found request
-	if (! matchedTodo){
-		return res.status(404).send();
+	// The attribute validation is being done with the model, like the datatype check
+	if (body.hasOwnProperty('completed')){
+		attributes.completed = body.completed;
 	}
 
-	//Handling the bad syntax request
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
-		validAttributes.completed = body.completed;
-	}else if (body.hasOwnProperty('completed')){
-		//Runs if the attribute completed has been provided and is not valid
-		return res.status(400).send();
+	if (body.hasOwnProperty('description')){
+		attributes.description = body.description;
 	}
 
-	if (body.hasOwnProperty('description') && _.isString('description') && body.description.trim().length > 0){
-		validAttributes.description = body.description;
-	}else if (body.hasOwnProperty('description')) {
-		//Runs if the attribute description has been provided and is not valid
-		return res.status(400).send();
-	}
-
-	/*
-	New underscore method extend which has source and destination
-	_.extend(destination, *sources)
-	_.extend({name: 'moe'}, {age: 50});
-	=> {name: 'moe', age: 50}
-	Here the source is validAttributes and the destination is todos item where is going to be updated
-	*/
-
-	_.extend(matchedTodo, validAttributes);
-	res.json(matchedTodo);
+	db.todo.findById(todoId).then(function (todo) {
+		if (todo) {
+			todo.update(attributes).then(function (todo) {
+				res.json(todo.toJSON());
+			}, function (e) {
+					res.status(400).json(e);
+				});
+		} else {	
+			res.status(404).send();
+		}
+	}, function () {
+		res.status(500).send();
+		// The below promises are if the todo update goes well and if it doesnt go well
+	})
 
 });
 
