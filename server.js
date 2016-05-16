@@ -74,6 +74,19 @@ app.post('/todos', function (req, res) {
 	});
 });
 
+//POST /users
+//POST a user account
+app.post('/users', function (req, res) {
+	var body = req.body;
+	var newUser = _.pick(body,'email','password');
+	db.user.create(newUser).then(function (user) {
+		//res.json(user.toJSON());
+		res.status(204).send();
+	},function (e) {
+		res.status(400).json(e);
+	});
+});
+
 // DELETE /todos/:id
 // DELETE a todo item and return it back to the user
 app.delete('/todos/:id', function (req, res) {
@@ -117,7 +130,7 @@ app.put('/todos/:id', function (req, res) {
 				res.json(todo.toJSON());
 			}, function (e) {
 					res.status(400).json(e);
-				});
+			});
 		} else {	
 			res.status(404).send();
 		}
@@ -127,6 +140,7 @@ app.put('/todos/:id', function (req, res) {
 	})
 
 });
+
 
 db.sequelize.sync().then(function (){
 	app.listen(PORT, function () {
