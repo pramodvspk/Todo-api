@@ -14,8 +14,18 @@ module.exports = function (sequelize, Datatypes) {
 			type : Datatypes.STRING,
 			allowNull : false,
 			validate : {
-				len : [7,90]
+				len : [7,991]
 			}
 		}
-	});
+	},{
+		// Add the hooks object after the user is defined
+			hooks: {
+				beforeValidate : function (user, options){
+					//user.email should be lowered
+					if (typeof(user.email) == "string"){
+						user.email = user.email.toLowerCase();
+					}
+				}
+			}
+		});
 }
