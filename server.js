@@ -81,7 +81,7 @@ app.post('/users', function (req, res) {
 	var newUser = _.pick(body,'email','password');
 	db.user.create(newUser).then(function (user) {
 		//res.json(user.toJSON());
-		res.status(204).send();
+		res.json(user.toPublicJSON());
 	},function (e) {
 		res.status(400).json(e);
 	});
@@ -99,7 +99,7 @@ app.delete('/todos/:id', function (req, res) {
 			});
 		}else {
 			// 204 signifies that no content need to be sent along with the OK Status
-			res.status(204).send();
+			res.json()
 		}
 	}, function (e) {
 		res.status(500).send();
