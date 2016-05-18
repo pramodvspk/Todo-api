@@ -56,7 +56,7 @@ module.exports = function (sequelize, Datatypes) {
 							console.log("Rejecting because not strings");
 							return reject();
 						}else{
-							user.findOne({where:{email : body.email}}).then(function (user) {
+							user.findOne({where:{email : body.email.toLowerCase()}}).then(function (user) {
 								if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))){
 									//Unauthorized response
 									console.log("Rejecting because pwd didnt match");
