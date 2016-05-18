@@ -3,7 +3,7 @@ var bcrypt = require('bcryptjs');
 var _ = require('underscore');
 
 module.exports = function (sequelize, Datatypes) {
-	return sequelize.define('user', {
+	var user = sequelize.define('user', {
 		email: {
 			type : Datatypes.STRING,
 			allowNull : false,
@@ -46,8 +46,30 @@ module.exports = function (sequelize, Datatypes) {
 			instanceMethods:{
 				toPublicJSON: function () {
 					var json = this.toJSON();
-					return _.pick(json, "id", "email");
+					return _.pick(json, "id", "email","createdAt","updatedAt");
+				}
+			},
+			classMethods:{
+				authenticate: function (body) {
+					return new Promise(function (resolve, reject) {
+						if(!typeof(body.email) == "string" || !typeof(body.password) == "string"){
+							console.log("Rejecting because not strings");
+							return reject();
+						}else{
+							user.findOne({where:{email : body.email}}).then(function (user) {
+								if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))){
+									//Unauthorized response
+									console.log("Rejecting because pwd didnt match");
+									return reject();
+								}
+								resolve(user);
+							}),function (e) {	
+								return reject();
+							}
+						}
+					});
 				}
 			}
 		});
+	return user;
 }

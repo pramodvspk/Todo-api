@@ -74,19 +74,6 @@ app.post('/todos', function (req, res) {
 	});
 });
 
-//POST /users
-//POST a user account
-app.post('/users', function (req, res) {
-	var body = req.body;
-	var newUser = _.pick(body,'email','password');
-	db.user.create(newUser).then(function (user) {
-		//res.json(user.toJSON());
-		res.json(user.toPublicJSON());
-	},function (e) {
-		res.status(400).json(e);
-	});
-});
-
 // DELETE /todos/:id
 // DELETE a todo item and return it back to the user
 app.delete('/todos/:id', function (req, res) {
@@ -141,8 +128,30 @@ app.put('/todos/:id', function (req, res) {
 
 });
 
+//POST /users
+//Create a user account
+app.post('/users', function (req, res) {
+	var body = req.body;
+	var newUser = _.pick(body,'email','password');
+	db.user.create(newUser).then(function (user) {
+		res.json(user.toPublicJSON());
+	},function (e) {
+		res.status(400).json(e);
+	});
+});
 
-db.sequelize.sync().then(function (){
+//POST /users/login
+//Login a user 
+app.post('/users/login', function (req, res) {
+	var body = _.pick(req.body, "email", "password");
+	db.user.authenticate(body).then(function (user) {
+		res.json(user.toPublicJSON());
+	}, function () {
+		res.status(401).send();
+	});
+});
+
+db.sequelize.sync({force: true}).then(function (){
 	app.listen(PORT, function () {
 		console.log("Express listening on port"+ PORT + "!");
 	});
