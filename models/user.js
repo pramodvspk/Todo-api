@@ -1,6 +1,8 @@
 // A specific format since we load using sequelize.imports
 var bcrypt = require('bcryptjs');
 var _ = require('underscore');
+var cryptojs = require('crypto-js');
+var jwt = require('jsonwebtoken');
 
 module.exports = function (sequelize, Datatypes) {
 	var user = sequelize.define('user', {
@@ -47,6 +49,30 @@ module.exports = function (sequelize, Datatypes) {
 				toPublicJSON: function () {
 					var json = this.toJSON();
 					return _.pick(json, "id", "email","createdAt","updatedAt");
+				},
+				generateToken: function (type) {
+					// new encrypted token which is returned back to the user
+					if(!_.isString(type)){
+						// If the type is not string then return it back
+						return undefined;
+					}
+
+					try {
+						//Encrypting user information as well as creating new JSON web token
+						// Takes the user JSON data and converts it into a string beacuse AES encrypt only knows how to encrypt a string
+						var stringData = JSON.stringify({id: this.get('id'), type: type});
+						// This returns our encrypted string
+						var encryptedData = cryptojs.AES.encrypt(stringData,'abc123@!@#').toString();
+						// Encrypting user information inside of a secret token and should return it
+						var token = jwt.sign({
+							token: encryptedData
+						}, 'qwerty098');
+
+						return token;
+					} catch (e) {
+						console.error(e);
+						return undefined;
+					}
 				}
 			},
 			classMethods:{
