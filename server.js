@@ -69,7 +69,14 @@ app.post('/todos', middleware.requireAuthentication, function (req, res) {
 	var body = req.body;
 	var newTodo = _.pick(body,'description','completed');
 	db.todo.create(newTodo).then(function(todo){
-		res.json(todo.toJSON());
+		/* 	Create the association between the user and the todo
+			Update the todo item
+			Return the new todo item to the api caller	*/
+		req.user.addTodo(todo).then(function () {
+			return todo.reload();
+		}).then(function (todo) {
+			res.json(todo.toJSON());
+		});
 	}).catch(function (e){
 		res.status(400).json(e);
 	});
