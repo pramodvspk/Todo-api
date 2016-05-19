@@ -56,7 +56,7 @@ module.exports = function (sequelize, Datatypes) {
 						// If the type is not string then return it back
 						return undefined;
 					}
-
+					
 					try {
 						//Encrypting user information as well as creating new JSON web token
 						// Takes the user JSON data and converts it into a string beacuse AES encrypt only knows how to encrypt a string
@@ -92,6 +92,39 @@ module.exports = function (sequelize, Datatypes) {
 							}),function (e) {	
 								return reject();
 							}
+						}
+					});
+				},
+				findByToken: function(token) {
+					return new Promise(function (resolve, reject) {
+						try {
+							// Since data was encrypted and token was created, now will have to decode the token and decrypt the data
+							// Decoding the token using verify method which takes the token and the secret key
+							var decodedJWT = jwt.verify(token, 'qwerty098');
+							var bytes = cryptojs.AES.decrypt(decodedJWT.token, 'abc123@!@#');
+							var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+							//so finally tokenData contains the id and the authentication type
+							/*
+							3 reasons to reject
+							1. If try catch fails if the token is not in a valid format
+							2. findById fails if the database wasnt proprtly connected
+							3. or if the id provided doesnt exist in the database
+							*/
+							user.findById(tokenData.id).then(function (user) {
+								if(user){
+									resolve(user);
+								} else{
+									console.log("Here at 3");
+									reject();
+								}
+							}, function (e) {
+								console.log("Here at 2");
+								reject();
+							})
+						} catch (e) {
+							console.error(e);
+							reject();
 						}
 					});
 				}

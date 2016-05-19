@@ -2,8 +2,9 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
-var db = require('./db.js')
+var db = require('./db.js');
 var app = express();
+var middleware = require('./middleware.js')(db);
 //Setting up the port on which the application is going to run
 var PORT = process.env.PORT || 3000;
 
@@ -21,7 +22,7 @@ app.get('/', function (req, res){
 
 // GET /todos?completed=true&q=house - todo items with conditions
 // GET /todos - all the todo items
-app.get('/todos', function (req, res){
+app.get('/todos', middleware.requireAuthentication, function (req, res){
 	var query = req.query;
 	// The where condition for querying
 	var where ={};
@@ -47,7 +48,7 @@ app.get('/todos', function (req, res){
 
 // GET /todos/:id
 // GET todo items by Id
-app.get('/todos/:id', function (req, res){
+app.get('/todos/:id', middleware.requireAuthentication, function (req, res){
 	var todoId = parseInt(req.params.id,10);
 	db.todo.findById(todoId).then(function (todo) {
 		//truthy value
@@ -64,7 +65,7 @@ app.get('/todos/:id', function (req, res){
 
 //POST /todos
 //POST a todo item
-app.post('/todos', function (req, res) {
+app.post('/todos', middleware.requireAuthentication, function (req, res) {
 	var body = req.body;
 	var newTodo = _.pick(body,'description','completed');
 	db.todo.create(newTodo).then(function(todo){
@@ -76,7 +77,7 @@ app.post('/todos', function (req, res) {
 
 // DELETE /todos/:id
 // DELETE a todo item and return it back to the user
-app.delete('/todos/:id', function (req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function (req, res) {
 	var todoId = parseInt(req.params.id, 10);
 	var where = {id : todoId};
 	db.todo.destroy({where}).then(function (rowsDeleted) {
@@ -96,7 +97,7 @@ app.delete('/todos/:id', function (req, res) {
 
 // PUT /todos/:id
 // Update a todo item
-app.put('/todos/:id', function (req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function (req, res) {
 	var body = req.body;
 	var todoId = parseInt(req.params.id, 10);
 	var body = _.pick(body,'description','completed');
