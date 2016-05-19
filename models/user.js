@@ -26,6 +26,7 @@ module.exports = function (sequelize, Datatypes) {
 			validate : {
 				len : [7,991]
 			},
+			// The set function actually sets the password by encrypting it
 			set: function (value) {
 				var salt = bcrypt.genSaltSync(10);
 				var hashedPassword = bcrypt.hashSync(value, salt);
